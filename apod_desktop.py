@@ -91,23 +91,23 @@ def init_apod_cache():
     # You should know what to do here as demonstrated in previous labs
 
     # Create the DB if it does not already exist
-    if not os.path.exists(image_cache_db):
-       db_cxn = sqlite3.connect(image_cache_db)
-       db_cursor = db_cxn.cursor()
-       create_db_query = """
-       CREATE TABLE IF NOT EXISTS image_data
-       (
-       id           INTEGER PRIMARY KEY,
-       title        TEXT NOT NULL,
-       explanation  TEXT NOT NULL,
-       file_path    TEXT NOT NULL,
-       sha256       TEXT NOT NULL
-
-         );
-     """
-    db_cursor.execute(create_db_query)
-    db_cxn.commit
-    db_cxn.close
+    if not os.path.isdir(image_cache_dir):
+        os.makedirs(image_cache_dir)
+    db_cxn = sqlite3.connect(image_cache_db)
+    db_cursor = db_cxn.cursor()
+    create_images_query = """
+        CREATE TABLE IF NOT EXISTS image_data
+        (
+            id          INTEGER PRIMARY KEY,
+            title       TEXT NOT NULL,
+            explanation TEXT NOT NULL,
+            file_path   TEXT NOT NULL,
+            sha256      TEXT NOT NULL
+        );
+    """
+    db_cursor.execute(create_images_query)
+    db_cxn.commit()
+    db_cxn.close()
 
 
     #Complete this with the correct instructions
@@ -136,9 +136,9 @@ def add_apod_to_cache(apod_date):
 
     # Download the APOD image
     apod_url = get_apod_image_url(apod_info)
-    apod_image_data = requests.get(apod_url)
+    apod_image_data = requests.get(apod_url).content
     apod_sha256 = hashlib.sha256(apod_image_data).hexdigest()
-    print("APOD SHA 256", apod_sha256)
+    print("APOD SHA-256:", apod_sha256)
 
 
    # four lines of code expected here
@@ -290,12 +290,12 @@ def get_apod_info(image_id):
     query_result = db_cursor.fetchone()
     db_cxn.close()
     apod_info = {
-        'title'
+        'title': f'{query_result[0]}',
+        'explanation' : f'{query_result[1]}',
+        'file_path' : f'{query_result[2]}'
 
     }
-    # Put information into a dictionary
-    #Fill this out
-
+   
     return apod_info
 
 def get_all_apod_titles():
